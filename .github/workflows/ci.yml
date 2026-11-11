@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.5"
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Tests
+        # No ai& key in CI: the tests use recorded responses and a mock upstream.
+        run: uv run pytest -q
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dummy .env (no real ai& key; the smoke test makes no model calls)
+        run: |
+          cat > .env <<'EOF'
+          AIAND_API_KEY=ci-dummy-not-a-real-key
+          KUMO_API_KEY=ci-write-key
+          KUMO_READ_KEY=ci-read-key
+          WEBUI_SECRET_KEY=ci-webui-secret
+          OPEN_TERMINAL_API_KEY=ci-terminal-key
+          KUMO_TODAY=2026-10-26
+          KUMO_DEBUG=1
+          EOF
+      - name: Bring up the stack and check it
+        run: scripts/compose-smoke.sh
+        env:
+          KUMO_PORT: "8080"
+          WEBUI_PORT: "3000"

@@ -1,0 +1,17 @@
+<div class="detail">
+  {% if c.summary.prompt %}
+  <h4>{{ _("The user asked") }}</h4>
+  <p class="q">{{ c.summary.prompt | truncate(300) }}</p>
+  <p class="muted">{{ _("{n} messages", n=c.summary.messages) }}{% if c.summary.tools %} · {{ _("{n} tool definitions", n=c.summary.tools) }}{% endif %}</p>
+  {% endif %}
+  {% if c.status == 0 %}
+  <p class="muted">{{ _("Running…") }}</p>
+  {% elif c.assembled %}
+  {% if c.assembled.tools %}<h4>{{ _("Tools called") }}</h4><p>{{ c.assembled.tools | join(', ') }}</p>{% endif %}
+  {% if c.assembled.reasoning %}<details><summary>{{ _("Reasoning ({n} characters)", n=c.assembled.reasoning | length) }}</summary><pre>{{ c.assembled.reasoning }}</pre></details>{% endif %}
+  <h4>{{ _("Answer") }}</h4>
+  <pre class="answer">{{ c.assembled.content or (_('Tool calls only (no text)') if c.assembled.tools else _('(no text)')) }}</pre>
+  {% endif %}
+  <details><summary>{{ _("Request (raw)") }}</summary><pre>{{ c.request }}</pre></details>
+  <details><summary>{{ _("Response (raw)") }}</summary><pre>{{ c.response }}</pre></details>
+</div>

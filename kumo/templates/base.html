@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="{{ page_lang() }}" data-theme="{{ page_theme() }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ _("Sales CRM") }}{% endblock %} · {{ _("ai& sample app") }}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/kumo.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+  <header>
+    <a class="name" href="/">Kumo <span>· {{ _("a sample sales CRM") }}</span></a>
+    <nav>
+      <a href="/">{{ _("Pipeline") }}</a>
+      <a href="/docs">API</a>
+      {% if debug_enabled() %}<a href="/debug">{{ _("Debug") }}</a>{% endif %}
+    </nav>
+    <span class="fictional">{{ _("Fictional demo data") }}</span>
+    <div class="lang" role="group" aria-label="Language">
+      {% for code, label in (("en", "EN"), ("ja", "日本語")) %}
+      <a href="/lang/{{ code }}?next={{ request.url.path | urlencode }}" data-lang="{{ code }}"{% if page_lang() == code %} class="on" aria-current="true"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </div>
+  </header>
+  <main>{% block main %}{% endblock %}</main>
+  <script>
+    // Inside /stage, the language switch is in the stage header instead.
+    if (parent !== window) document.querySelector('header .lang')?.remove();
+    // Switch language without losing the query string, and tell /stage so the call feed follows.
+    document.querySelectorAll('.lang a').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.cookie = `kumo_lang=${a.dataset.lang}; path=/; max-age=31536000; samesite=lax`;
+      if (parent !== window) parent.postMessage({ kumoLang: a.dataset.lang }, location.origin);
+      const url = new URL(location.href);
+      url.searchParams.delete('lang');
+      location.replace(url);
+    }));
+  </script>
+</body>
+</html>

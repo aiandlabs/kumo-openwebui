@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{{ page_lang() }}" data-theme="{{ page_theme() }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ _("ai& API calls") }}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/debug-compact.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+  <header>
+    <b>ai& API</b>
+    {% if enabled %}<span class="live">● LIVE</span>{% endif %}
+    <span class="grow"></span>
+    <a href="/debug" target="_blank">{{ _("Details") }}</a>
+    <form method="post" action="/debug/clear"><input type="hidden" name="compact" value="true"><button>{{ _("Clear") }}</button></form>
+  </header>
+  {% if not enabled %}
+  <p class="off">{{ _("debug-feed-off") | safe }}</p>
+  {% else %}
+  <main id="cards" data-empty="{{ _('No calls yet.') }}">{% for c in calls %}{% include "_debug_card.html" %}{% endfor %}</main>
+  {% include "_debug_totals.html" %}
+  <div id="poller" hx-get="/debug/feed?after={{ cursor }}" hx-trigger="every 1s" hx-swap="none"></div>
+  {% endif %}
+  <script>
+    // Running timer on calls that are still in progress. The server sends each call's age,
+    // so the timer does not depend on the two clocks agreeing.
+    setInterval(() => {
+      document.querySelectorAll('.run[data-age]').forEach((e) => {
+        e.dataset.t0 ||= Date.now() - parseFloat(e.dataset.age) * 1000;
+        e.querySelector('.elapsed').textContent = ((Date.now() - e.dataset.t0) / 1000).toFixed(1);
+      });
+    }, 100);
+    // When a call finishes, its card is replaced; keep it open if the viewer had opened it.
+    document.body.addEventListener('htmx:oobBeforeSwap', (e) => {
+      const old = e.detail.target;
+      if (old?.matches?.('article.card') && old.querySelector('details[open]')) {
+        e.detail.fragment?.querySelector?.('details')?.setAttribute('open', '');
+      }
+    });
+  </script>
+</body>
+</html>

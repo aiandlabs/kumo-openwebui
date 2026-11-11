@@ -1,0 +1,22 @@
+<div class="ai-out">
+  {% if r.kind == 'summary' %}
+    <b>{{ _("Summary") }}</b><p>{{ r.output.text }}</p>
+  {% elif r.kind == 'next_steps' %}
+    <b>{{ _("Next steps") }}</b>
+    <ol>{% for s in r.output.steps %}<li><b>{{ s.action }}</b>{{ _("by {date}", date=s.due_on) | paren }}<br><small>{{ s.reason }}</small></li>{% endfor %}</ol>
+  {% elif r.kind == 'notes_extract' %}
+    <b>{{ _("Proposed update from meeting notes") }}</b>
+    {% if r.applied_at %}<p><small>{{ _("Applied") }}</small></p>{% else %}
+    <form method="post" action="/deals/{{ r.deal_id or d.id }}/ai/notes/{{ r.id }}/apply">
+      <label><input type="checkbox" name="items" value="activity" checked> {{ _("Log activity: {text}", text=r.output.activity_summary) }}</label><br>
+      {% if r.output.proposed_stage %}<label><input type="checkbox" name="items" value="stage" checked> {{ _("Stage → {value}", value=r.output.proposed_stage) }}</label><br>{% endif %}
+      {% if r.output.proposed_close_on %}<label><input type="checkbox" name="items" value="close" checked> {{ _("Expected close → {value}", value=r.output.proposed_close_on) }}</label><br>{% endif %}
+      {% if r.output.proposed_amount_jpy %}<label><input type="checkbox" name="items" value="amount" checked> {{ _("Amount → {value}", value="¥{:,}".format(r.output.proposed_amount_jpy)) }}</label><br>{% endif %}
+      {% for p in r.output.new_people %}<div><small>{{ _("New contact: {value}", value=p.name ~ ' ' ~ (p.title or '')) }}</small></div>{% endfor %}
+      <p><small>{{ r.output.reasoning }}</small></p>
+      <button>{{ _("Apply selected") }}</button>
+    </form>
+    {% endif %}
+  {% endif %}
+  <div class="model">{{ _("{model} · {input} in / {output} out tokens", model=r.model, input=r.input_tokens, output=r.output_tokens) }}</div>
+</div>

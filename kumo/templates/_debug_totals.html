@@ -1,0 +1,5 @@
+<footer id="totals"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div class="sum">{{ _("<b>{calls}</b> calls · <b>{input}</b> in · <b>{output}</b> out tokens", calls=totals.calls, input=totals.input_tokens | k, output=totals.output_tokens | k) | safe }}</div>
+  <div class="models">{% for m in totals.models %}<span>{{ m.model | short_model }} <b>{{ m.calls }}</b></span>{% endfor %}</div>
+  <div class="where">{{ _("All on api.aiand.com") }}</div>
+</footer>

@@ -1,0 +1,25 @@
+<table class="calls">
+  <thead><tr><th>{{ _("Time") }}</th><th>{{ _("Caller") }}</th><th>{{ _("Kind") }}</th><th>{{ _("Model") }}</th><th>{{ _("Status") }}</th><th>{{ _("Latency") }}</th><th>{{ _("Input") }}</th><th>{{ _("Output") }}</th></tr></thead>
+  <tbody>
+  {% for c in calls %}
+    <tr hx-get="/debug/calls/{{ c.id }}" hx-target="#call" class="{{ 'err' if c.status >= 400 }}">
+      <td><time>{{ c.created_at | jst }}</time></td>
+      <td><span class="src {{ c.source }}">{{ c.caller | loc('caller') }}</span></td>
+      <td>{{ c.kind | loc('call_kind') }}{% if c.stream %} <small class="muted">stream</small>{% endif %}<br><small class="muted">{{ c.path }}</small></td>
+      <td>{{ c.model or '-' }}</td>
+      <td>{{ c.status }}</td>
+      <td class="num">{{ "{:,}".format(c.latency_ms) }} ms</td>
+      <td class="num">{{ "{:,}".format(c.input_tokens) if c.input_tokens is not none else '-' }}</td>
+      <td class="num">{{ "{:,}".format(c.output_tokens) if c.output_tokens is not none else '-' }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="8" class="muted">{{ _("No calls yet.") }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if totals %}
+<table class="calls totals">
+  <thead><tr><th>{{ _("Model") }}</th><th>{{ _("Calls") }}</th><th>{{ _("Input tokens") }}</th><th>{{ _("Output tokens") }}</th></tr></thead>
+  <tbody>{% for t in totals %}<tr><td>{{ t.model }}</td><td class="num">{{ t.calls }}</td><td class="num">{{ "{:,}".format(t.input_tokens) }}</td><td class="num">{{ "{:,}".format(t.output_tokens) }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}

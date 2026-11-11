@@ -1,0 +1,21 @@
+# ai& embeddings and rerank for Open WebUI's knowledge search. These are in private preview.
+# With access, set KUMO_EMBEDDINGS_URL (and KUMO_EMBEDDINGS_HEADERS if your access needs any) in .env, then:
+#   docker compose -f docker-compose.yml -f docker-compose.aiand-embeddings.yml up
+# The calls go through Kumo's pass-through, so they show in the call feed. Kumo sends them to
+# KUMO_EMBEDDINGS_URL with KUMO_EMBEDDINGS_HEADERS, and drops the ai& API key below for these calls.
+
+services:
+  open-webui:
+    environment:
+      RAG_EMBEDDING_ENGINE: openai
+      RAG_OPENAI_API_BASE_URL: ${WEBUI_AIAND_BASE_URL:-http://kumo:8080/proxy/open-webui/v1}
+      RAG_OPENAI_API_KEY: ${AIAND_API_KEY}
+      RAG_EMBEDDING_MODEL: google/embeddinggemma-2
+      # EmbeddingGemma 2 needs task prefixes. Both end in one space.
+      RAG_EMBEDDING_QUERY_PREFIX: "task: search result | query: "
+      RAG_EMBEDDING_CONTENT_PREFIX: "title: none | text: "
+      ENABLE_RAG_HYBRID_SEARCH: "true"
+      RAG_RERANKING_ENGINE: external
+      RAG_RERANKING_MODEL: BAAI/bge-reranker-v2-m3
+      RAG_EXTERNAL_RERANKER_URL: http://kumo:8080/proxy/open-webui/v1/rerank
+      RAG_EXTERNAL_RERANKER_API_KEY: ${AIAND_API_KEY}

@@ -1,0 +1,71 @@
+# The full demo: Kumo, Open WebUI and Open Terminal, connected to ai&.
+#   cp .env.example .env   # then set AIAND_API_KEY
+#   docker compose up
+# Kumo:        http://localhost:8080  (KUMO_PORT)
+# Open WebUI:  http://localhost:3000  (WEBUI_PORT)  (the first account you create is the admin)
+
+services:
+  kumo:
+    build: .
+    env_file: .env
+    environment:
+      KUMO_PUBLIC_URL: http://localhost:${KUMO_PORT:-8080}
+      # The /stage page shows Open WebUI here, next to the live call feed.
+      KUMO_STAGE_WEBUI_URL: http://localhost:${WEBUI_PORT:-3000}
+      # One-line notes in the call feed on what each call did, written by a fast ai& model.
+      KUMO_FEED_NOTES: "1"
+      # Keep Open WebUI's "Kumo CRM" knowledge base in step with the deals (kumo/kbsync.py),
+      # signed in as Open WebUI's demo admin (KUMO_OWUI_EMAIL / KUMO_OWUI_PASSWORD in .env).
+      KUMO_OWUI_URL: http://open-webui:8080
+    ports: ["${KUMO_PORT:-8080}:8080"]
+    volumes: [kumo-data:/data]
+
+  open-terminal:
+    # The pinned upstream image plus Japanese fonts (see the Dockerfile).
+    build: docker/open-terminal
+    image: kumo-open-terminal:fonts-ja
+    environment:
+      OPEN_TERMINAL_API_KEY: ${OPEN_TERMINAL_API_KEY}
+      # The terminal reads Kumo's exports with the read-only key.
+      KUMO_URL: http://kumo:8080
+      KUMO_READ_KEY: ${KUMO_READ_KEY}
+      OPEN_TERMINAL_PIP_PACKAGES: python-docx matplotlib-fontja
+    volumes: [terminal-home:/home/user]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui@sha256:46b59158e6558eeb980bc828e0f1b30238ad24d82ed84d5e5eda1dab2a082f14  # v0.13.3
+    ports: ["${WEBUI_PORT:-3000}:8080"]
+    environment:
+      # Without a fixed key, Open WebUI makes a new one when the container is recreated and signs everyone out.
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      ENABLE_OLLAMA_API: "false"
+      # Through Kumo's pass-through, so Kumo's debug panel (KUMO_DEBUG=1) shows Open WebUI's calls.
+      # In production, use https://api.aiand.com/v1 directly.
+      OPENAI_API_BASE_URLS: ${WEBUI_AIAND_BASE_URL:-http://kumo:8080/proxy/open-webui/v1}
+      OPENAI_API_KEYS: ${AIAND_API_KEY}
+      DEFAULT_MODELS: meta/muse-spark-open
+      DEFAULT_LOCALE: ja-JP
+      # Titles, tags and follow-up suggestions run on a fast model without reasoning, not the chat model.
+      # (A reasoning model spent up to 40 s and 6,000 tokens per task.)
+      TASK_MODEL_EXTERNAL: google/gemma-4-31b-it
+      WEBUI_NAME: ai& × Open WebUI
+      TOOL_SERVER_CONNECTIONS: >-
+        [{"url": "http://kumo:8080", "path": "openapi.json", "type": "openapi", "auth_type": "bearer",
+          "key": "${KUMO_READ_KEY}", "spec_type": "url", "spec": "",
+          "config": {"enable": true, "function_name_filter_list": "", "access_grants": []},
+          "info": {"id": "kumo", "name": "Kumo CRM", "description": "Sales pipeline, deals and AI summaries"}}]
+      # Empty access_grants means admins only; grant groups in Admin › Settings.
+      TERMINAL_SERVER_CONNECTIONS: >-
+        [{"id": "open-terminal", "name": "Open Terminal", "enabled": true,
+          "url": "http://open-terminal:8000", "path": "/openapi.json",
+          "auth_type": "bearer", "key": "${OPEN_TERMINAL_API_KEY}",
+          "config": {"access_grants": []}}]
+      # Knowledge-base search uses Open WebUI's built-in embedding models. To use ai& embeddings
+      # and rerank instead (private preview), add docker-compose.aiand-embeddings.yml.
+    volumes: [webui-data:/app/backend/data]
+    depends_on: [kumo, open-terminal]
+
+volumes:
+  kumo-data:
+  terminal-home:
+  webui-data:

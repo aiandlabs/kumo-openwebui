@@ -1,0 +1,23 @@
+<article id="card-{{ c.id }}" class="card k-{{ c.kind | replace(' ', '-') }}{% if c.status == 0 %} pending{% elif c.status >= 400 %} err{% endif %}{% if fresh %} fresh{% endif %}"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <details hx-get="/debug/calls/{{ c.id }}?compact=1" hx-trigger="toggle once" hx-target="find .body">
+    <summary>
+      <div class="l1">
+        <span class="kind">{{ c.kind | loc('call_kind') }}</span>
+        <span class="who {{ c.source }}">{{ c.caller | loc('caller') }}</span>
+        <time>{{ c.created_at | jst }}</time>
+      </div>
+      <div class="l2">
+        <span class="model">{{ c.model | short_model }}</span>
+        {% if c.status == 0 %}
+        <span class="run" data-age="{{ '%.2f' % (c.created_at | age) }}">{{ _('Running <b class="elapsed">0.0</b> s') | safe }}</span>
+        {% else %}
+        <span class="lat">{{ _("{n} s", n='%.1f' % (c.latency_ms / 1000)) }}</span>
+        {% if c.status >= 400 %}<span class="status">HTTP {{ c.status }}</span>{% endif %}
+        {% endif %}
+        {% if c.input_tokens is not none %}<span class="tok">{{ c.input_tokens | k }} → {{ c.output_tokens | k }}</span>{% endif %}
+      </div>
+      {% set note = c.note | note(page_lang()) %}{% if note %}<p class="note">{{ note }}</p>{% endif %}
+    </summary>
+    <div class="body"></div>
+  </details>
+</article>

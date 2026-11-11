@@ -1,0 +1,8 @@
+{
+  "name": "kumo-f7",
+  "private": true,
+  "description": "F7: the Nov 11 demo script, end to end on Kumo's /stage page",
+  "type": "module",
+  "scripts": { "f7": "node f7.mjs" },
+  "dependencies": { "playwright": "1.64.1" }
+}

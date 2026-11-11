@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Pipeline") }}{% endblock %}
+{% block main %}
+<form class="filters" method="get">
+  <select name="region" onchange="this.form.submit()">
+    <option value="">{{ _("All regions") }}</option>
+    {% for r in regions %}<option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r | loc('region') }}</option>{% endfor %}
+  </select>
+  <select name="owner" onchange="this.form.submit()">
+    <option value="">{{ _("All owners") }}</option>
+    {% for o in owners %}<option value="{{ o }}" {% if o == owner %}selected{% endif %}>{{ o | loc('owner') }}</option>{% endfor %}
+  </select>
+  <span style="color: var(--muted)">{{ _("As of {date}", date=today) }}</span>
+</form>
+<div class="board">
+  {% for c in cols %}
+  <section class="col">
+    <h3>{{ c | stage_name }} <small>{{ _("{n} deal · ¥{amount}" if c.count == 1 else "{n} deals · ¥{amount}", n=c.count, amount=c.total|yen) }}{% if c.count > c.deals|length %}<br>{{ _("latest {n} shown", n=c.deals|length) }}{% endif %}</small></h3>
+    {% for d in c.deals %}
+    <a class="card" href="/deals/{{ d.id }}">
+      <div class="co">{{ d | company_name }}{% if d.tier == 'key' %}<span class="key">{{ _("Key") }}</span>{% endif %}</div>
+      <div>{{ d | deal_theme }}</div>
+      <div class="meta">
+        <span>¥{{ d.amount_jpy | yen }} · {{ d.region | loc('region') }}</span>
+        {% if d.status == 'open' %}<span class="{{ 'stale' if d.days_in_stage >= 30 else '' }}">{{ _("{n}d", n=d.days_in_stage) }}</span>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

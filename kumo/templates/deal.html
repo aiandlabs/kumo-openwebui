@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ d | deal_name }}{% endblock %}
+{% block main %}
+<p><a href="/">{{ _("← Pipeline") }}</a></p>
+<div class="deal">
+  <div>
+    <section class="panel">
+      <h2>{{ d | deal_name }}{% if d.tier == 'key' %}<span class="key">{{ _("Key account") }}</span>{% endif %}</h2>
+      {% if page_lang() == 'en' %}<p class="orig">{{ d.name }}</p>{% endif %}
+      <dl>
+        <dt>{{ _("Company") }}</dt><dd>{{ d.company }}{{ ((d.region | loc('region')) ~ (' · ' if page_lang() == 'en' else '・') ~ (d.industry | loc('industry'))) | paren }}</dd>
+        <dt>{{ _("Stage") }}</dt>
+        <dd>
+          <form method="post" action="/deals/{{ d.id }}/stage" style="display:inline">
+            <select name="stage" onchange="this.form.submit()">
+              {% for s in stages %}<option value="{{ s.key }}" {% if s.key == d.stage %}selected{% endif %}>{{ s | stage_name }}</option>{% endfor %}
+            </select>
+          </form>
+          {% if d.status == 'open' %}<span class="{{ 'stale' if d.days_in_stage >= 30 else '' }}">{{ _("{n}d", n=d.days_in_stage) }}</span>{% endif %}
+        </dd>
+        <dt>{{ _("Amount") }}</dt><dd>¥{{ "{:,}".format(d.amount_jpy or 0) }}</dd>
+        <dt>{{ _("Expected close") }}</dt><dd>{{ d.expected_close_on }}</dd>
+        <dt>{{ _("Owner") }}</dt><dd>{{ d.owner | loc('owner') }}</dd>
+        {% if d.lost_reason %}<dt>{{ _("Lost reason") }}</dt><dd>{{ d.lost_reason | loc('lost_reason') }}</dd>{% endif %}
+      </dl>
+    </section>
+    <section class="panel">
+      <h2>{{ _("Contacts") }}</h2>
+      <ul class="acts">{% for p in d.people %}<li>{{ p | person_name }} · {{ p.title | loc('title') }} · <a href="mailto:{{ p.email }}">{{ p.email }}</a></li>{% endfor %}</ul>
+    </section>
+    <section class="panel">
+      <h2>{{ _("Activity") }}</h2>
+      <ul class="acts">
+        {% for a in d.activities %}<li><time>{{ a.occurred_at[:10] }}</time><b>[{{ a.kind | loc('activity') }}]</b> {{ a.body }}{% if a.person %}{{ a.person | paren }}{% endif %}</li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+  <aside>
+    <section class="panel">
+      <h2>{{ _("AI assistant") }} <small style="color:var(--muted);font-weight:400">{{ _("runs on ai& models") }}</small></h2>
+      <button hx-post="/deals/{{ d.id }}/ai/summary" hx-target="#ai" hx-swap="afterbegin">{{ _("Summary") }}</button>
+      <button hx-post="/deals/{{ d.id }}/ai/next-steps" hx-target="#ai" hx-swap="afterbegin">{{ _("Next steps") }}</button>
+      <span class="spin">{{ _("Working…") }}</span>
+      <form hx-post="/deals/{{ d.id }}/ai/notes" hx-target="#ai" hx-swap="afterbegin" style="margin-top:12px">
+        <textarea name="notes" placeholder="{{ _('Paste meeting notes to get a proposed update (nothing is saved until you confirm)') }}"></textarea>
+        <button>{{ _("Propose update from notes") }}</button>
+      </form>
+      <div id="ai">
+        {% for r in runs %}{% include "_ai_run.html" %}{% endfor %}
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

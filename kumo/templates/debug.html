@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Debug") }}{% endblock %}
+{% block main %}
+{% if not enabled %}
+<div class="panel">
+  <h2>{{ _("Debug panel is off") }}</h2>
+  <p>{{ _("debug-off-help") | safe }}</p>
+</div>
+{% else %}
+<div class="debug">
+  <section>
+    <div class="filters">
+      <b>{{ _("ai& API calls") }}</b>
+      <small class="muted">{{ _("Refreshes every 2 s · keeps the latest 500") }}</small>
+      <form method="post" action="/debug/clear" style="margin-left:auto"><button class="ghost">{{ _("Clear") }}</button></form>
+    </div>
+    <div id="calls" hx-get="/debug/calls" hx-trigger="load, every 2s"></div>
+  </section>
+  <aside id="call" class="panel"><p class="muted">{{ _("Click a row to see the request and response.") }}</p></aside>
+</div>
+{% endif %}
+{% endblock %}

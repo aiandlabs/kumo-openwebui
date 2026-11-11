@@ -1,0 +1,16 @@
+<h2>{{ c.kind | loc('call_kind') }} · {{ c.model or '-' }}</h2>
+<dl>
+  <dt>{{ _("Caller") }}</dt><dd>{{ c.caller | loc('caller') }}{{ (_('Sales CRM') if c.source == 'kumo' else _('via the pass-through')) | paren }}</dd>
+  <dt>{{ _("Endpoint") }}</dt><dd><code>{{ c.method }} {{ c.path }}</code></dd>
+  <dt>{{ _("Status") }}</dt><dd>{{ c.status }} · {{ "{:,}".format(c.latency_ms) }} ms</dd>
+  <dt>{{ _("Tokens") }}</dt><dd>{{ _("{input} in / {output} out", input=c.input_tokens if c.input_tokens is not none else '-', output=c.output_tokens if c.output_tokens is not none else '-') }}</dd>
+  <dt>{{ _("Time") }}</dt><dd>{{ c.created_at }}</dd>
+</dl>
+{% if c.assembled %}
+<h3>{{ _("Response (assembled from the stream)") }}</h3>
+{% if c.assembled.tools %}<p><b>{{ _("Tool calls:") }}</b> {{ c.assembled.tools | join(', ') }}</p>{% endif %}
+{% if c.assembled.reasoning %}<details><summary>{{ _("Reasoning ({n} characters)", n=c.assembled.reasoning | length) }}</summary><pre>{{ c.assembled.reasoning }}</pre></details>{% endif %}
+<pre>{{ c.assembled.content or _('(no text)') }}</pre>
+{% endif %}
+<details open><summary>{{ _("Request") }}</summary><pre>{{ c.request }}</pre></details>
+<details{% if not c.assembled %} open{% endif %}><summary>{{ _("Response (raw)") }}</summary><pre>{{ c.response }}</pre></details>

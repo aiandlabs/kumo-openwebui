@@ -1,0 +1,4 @@
+{% if new %}<div hx-swap-oob="afterbegin:#cards">{% with fresh = True, oob = False %}{% for c in new %}{% include "_debug_card.html" %}{% endfor %}{% endwith %}</div>{% endif %}
+{% with fresh = True, oob = True %}{% for c in updated %}{% include "_debug_card.html" %}{% endfor %}{% endwith %}
+{% with oob = True %}{% include "_debug_totals.html" %}{% endwith %}
+<div id="poller" hx-swap-oob="true" hx-get="/debug/feed?after={{ cursor }}" hx-trigger="every 1s" hx-swap="none"></div>

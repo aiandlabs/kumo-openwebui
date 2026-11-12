@@ -51,9 +51,12 @@ services:
       WEBUI_NAME: ai& × Open WebUI
       TOOL_SERVER_CONNECTIONS: >-
         [{"url": "http://kumo:8080", "path": "openapi.json", "type": "openapi", "auth_type": "bearer",
-          "key": "${KUMO_READ_KEY}", "spec_type": "url", "spec": "",
+          "key": "${WEBUI_KUMO_KEY:-${KUMO_READ_KEY}}", "spec_type": "url", "spec": "",
           "config": {"enable": true, "function_name_filter_list": "", "access_grants": []},
           "info": {"id": "kumo", "name": "Kumo CRM", "description": "Sales pipeline, deals and AI summaries"}}]
+      # Read-only by default. Set WEBUI_KUMO_KEY to KUMO_API_KEY's value to let models add notes to deals
+      # (add_activity, which tells the model to ask the user first). Open WebUI saves this connection on its
+      # first start; after that, change the key in Admin › Settings › Integrations instead.
       # Empty access_grants means admins only; grant groups in Admin › Settings.
       TERMINAL_SERVER_CONNECTIONS: >-
         [{"id": "open-terminal", "name": "Open Terminal", "enabled": true,

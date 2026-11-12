@@ -36,6 +36,10 @@ Try:
 * Kumo: open a deal, click **Summary** and **Next steps**, paste meeting notes and click **Propose update from notes**.
 * Open WebUI, with Tools › Kumo CRM on: 「関西でPoCのまま30日以上止まっている案件は？」
 * Open WebUI, with Terminal › Open Terminal on: 「今週のパイプラインレポートを Word で作って。データは Kumo から（KUMO_URL と KUMO_READ_KEY）」
+* Open WebUI, with the knowledge base synced: "Why have we been losing deals? Check the deal notes in the knowledge base too.", then "Which of those lessons apply to the deals we still have open?"
+* With write access (below): "Add a short note to each of those deals with the lesson and one next step." The model asks before it writes, and the notes appear on the deals in Kumo.
+
+Open WebUI's Kumo tools are read-only by default. To let models add notes to deals, set `WEBUI_KUMO_KEY` in `.env` to the same value as `KUMO_API_KEY` before the first start. (Open WebUI saves the connection on its first start; after that, change the key in Admin › Settings › Integrations.)
 
 ## Debug panel
 
@@ -68,6 +72,7 @@ uv run pytest
 | `AIAND_API_KEY` | (required for AI features) | ai& API key |
 | `KUMO_API_KEY` | (none) | Bearer key that can read and write. With no keys set, the API is open. |
 | `KUMO_READ_KEY` | (none) | Bearer key that can only read |
+| `WEBUI_KUMO_KEY` | `KUMO_READ_KEY` | Key Open WebUI's Kumo tools use. Set it to `KUMO_API_KEY`'s value to let models add notes to deals. |
 | `KUMO_DB` | `kumo.db` | SQLite file |
 | `KUMO_DEBUG` | off | `1` turns on the debug panel and call log |
 | `KUMO_TODAY` | today | Pin "today" so the demo data always looks the same |
@@ -108,6 +113,8 @@ docker compose up
 Open WebUI は ai&、Kumo のツールサーバー、Open Terminal に接続済みの状態で起動します。最初は管理者だけが使えます。他のユーザーに使わせるには、管理者設定 › 連携 › 各接続 › アクセス でグループを追加し、そのグループに使わせるモデルも許可してください。
 
 `.env` に `KUMO_OWUI_EMAIL` と `KUMO_OWUI_PASSWORD`（Open WebUI のアカウント）を設定すると、Kumo が案件メモを Open WebUI の「Kumo CRM」ナレッジに同期します。営業資料として `demo/knowledge/` のファイルをワークスペース › ナレッジにアップロードすることもできます。
+
+Open WebUI の Kumo ツールは既定で読み取り専用です。モデルに案件へのメモ追加を許可するには、初回起動の前に `.env` の `WEBUI_KUMO_KEY` に `KUMO_API_KEY` と同じ値を設定します（書き込む前にモデルがユーザーに確認します）。初回起動後は 管理者設定 › 連携 で変更してください。
 
 ナレッジ検索は既定で Open WebUI 内蔵の埋め込みモデルを使います。ai& の埋め込み・リランクはプライベートプレビュー中です。利用できる場合は `docker-compose.aiand-embeddings.yml` を参照してください。
 
